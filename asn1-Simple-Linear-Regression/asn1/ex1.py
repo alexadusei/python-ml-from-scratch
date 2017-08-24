@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 def main():
     X, y, theta = preprocess_data()
 
-    compute_cost(X, y, theta)
+    # compare_parameters(X, y, theta)
+    compute_gradient_descent(X, y, theta, alpha=0.01, iters=1000)
 
 
 def get_data():
@@ -55,10 +56,64 @@ def compute_cost(X, y, theta):
 
 
 def compute_gradient_descent(X, y, theta, alpha=0.01, iters=1500):
-    m = len(X)
-    h = compute_hypothesis(X, theta)
+    print ("Gradient Descent at alpha = " +
+           str(alpha) + ", iters = " + str(iters))
 
-    pass
+    m = len(X)
+    temp_theta = np.matrix(np.zeros(theta.shape))
+
+    # Unroll your theta parameters to a one-dimensional array. Not necessary
+    # for this example, but standard practice for when theta becomes
+    # multidimensional (think CNNs, where it's a matrix instead of a vector)
+    num_parameters = theta.flatten().shape[1]
+    cost = np.zeros(iters)
+
+    for i in range(iters):
+        h = compute_hypothesis(X, theta)
+
+        for j in range(num_parameters):
+            x_feature = X[:, j]
+            temp_theta[0, j] = theta[0, j] - (alpha * (1.0 / m)) \
+                * sum(np.multiply(h - y, x_feature))
+
+        theta = temp_theta
+        cost[i] = compute_cost(X, y, theta)
+
+    print "Theta:", theta[0, 0], theta[0, 1]
+    print "Cost:", cost[-1]
+
+    return theta, cost
+
+
+def compare_parameters(X, y, theta):
+    "Looking for best learning parameters..."
+
+    alphas = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0]
+    iterations = [100, 250, 500, 750, 1000, 1250, 1500, 1750]
+
+    best_alpha = alphas[0]
+    best_iters = iterations[0]
+    lowest_cost = np.inf
+
+    for alpha in alphas:
+        for iters in iterations:
+            theta, cost_history = compute_gradient_descent(
+                                    X, y, theta, alpha, iters)
+            cost = cost_history[-1]
+
+            if cost < lowest_cost:
+                lowest_cost = cost
+                best_alpha = alpha
+                best_iters = iters
+
+
+    print "Done!\n"
+    print "Lowest cost:", best_alpha
+    print "Best alpha:", best_iters
+    print "Best amount of iterations:", lowest_cost
+
+    return best_alpha, best_iters, lowest_cost
+
 
 if __name__ == '__main__':
     main()
