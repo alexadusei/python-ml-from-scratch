@@ -6,8 +6,27 @@ import matplotlib.pyplot as plt
 def main():
     X, y, theta = preprocess_data()
 
-    # compare_parameters(X, y, theta)
-    compute_gradient_descent(X, y, theta, alpha=0.01, iters=1000)
+    # best alpha/iters found with find_best_learning_rate
+    alpha = 0.01
+    iters = 1750
+
+    theta, _ = compute_gradient_descent(X, y, theta, alpha, iters)
+    run_predictions(theta)
+
+
+def run_predictions(theta):
+    house_data = [
+        [1, 3.5],
+        [1, 7],
+        ]
+
+    # returns Numpy matrices. Use .item() to retrive integer value
+    prediction_1 = compute_hypothesis(house_data[0], theta).item() * 10000
+    prediction_2 = compute_hypothesis(house_data[1], theta).item() * 10000
+
+    print "Predict values for population sizes of 35,000 and 70,000:\n"
+    print "Population = 35,000, predicted profit is: ${}".format(prediction_1)
+    print "Population = 70,000, predicted profit is: ${}".format(prediction_2)
 
 
 def get_data():
@@ -24,16 +43,16 @@ def preprocess_data():
     data.insert(0, 'Ones', 1)
 
     # set X (training data) and y (target variable)
-    cols = data.shape[1]
+    num_cols = data.shape[1]
 
     # the splicing is done this way for general-purpose. However many columns
     # our X data has, splice it up until the last column
     # (up to but not including)
-    X = data.iloc[:, :cols-1]
+    X = data.iloc[:, :num_cols-1]
 
     # y will always be the last column, whatever the 'last' is in any general
     # case. Splice from the last column up to the end
-    y = data.iloc[:, cols-1:]
+    y = data.iloc[:, num_cols-1:]
 
     X = np.matrix(X.values)
     y = np.matrix(y.values)
@@ -56,8 +75,7 @@ def compute_cost(X, y, theta):
 
 
 def compute_gradient_descent(X, y, theta, alpha=0.01, iters=1500):
-    print ("Gradient Descent at alpha = " +
-           str(alpha) + ", iters = " + str(iters))
+    print "Gradient Descent at alpha = {}, iters = {}".format(alpha, iters)
 
     m = len(X)
     temp_theta = np.matrix(np.zeros(theta.shape))
@@ -66,27 +84,23 @@ def compute_gradient_descent(X, y, theta, alpha=0.01, iters=1500):
     # for this example, but standard practice for when theta becomes
     # multidimensional (think CNNs, where it's a matrix instead of a vector)
     num_parameters = theta.flatten().shape[1]
-    cost = np.zeros(iters)
+    cost_history = np.zeros(iters)
 
     for i in range(iters):
         h = compute_hypothesis(X, theta)
-
-        for j in range(num_parameters):
-            x_feature = X[:, j]
-            temp_theta[0, j] = theta[0, j] - (alpha * (1.0 / m)) \
-                * sum(np.multiply(h - y, x_feature))
+        temp_theta = theta - (alpha * (1.0 / m)) * sum(np.multiply(h - y, X))
 
         theta = temp_theta
-        cost[i] = compute_cost(X, y, theta)
+        cost_history[i] = compute_cost(X, y, theta)
 
-    print "Theta:", theta[0, 0], theta[0, 1]
-    print "Cost:", cost[-1]
+    print "Theta: {}, {}".format(theta[0, 0], theta[0, 1])
+    print "Cost: {}\n".format(cost_history[-1])
 
-    return theta, cost
+    return theta, cost_history
 
 
-def compare_parameters(X, y, theta):
-    "Looking for best learning parameters..."
+def find_best_learning_rate(X, y, theta):
+    print "Looking for best learning parameters..."
 
     alphas = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0]
     iterations = [100, 250, 500, 750, 1000, 1250, 1500, 1750]
@@ -108,9 +122,9 @@ def compare_parameters(X, y, theta):
 
 
     print "Done!\n"
-    print "Lowest cost:", best_alpha
-    print "Best alpha:", best_iters
-    print "Best amount of iterations:", lowest_cost
+    print "Lowest cost: {}".format(lowest_cost)
+    print "Best alpha: {}".format(best_alpha)
+    print "Best amount of iterations: {}".format(best_iters)
 
     return best_alpha, best_iters, lowest_cost
 
