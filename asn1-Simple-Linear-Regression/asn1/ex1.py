@@ -4,40 +4,39 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def main():
-    X, y, theta = preprocess_data()
+    population_data = [
+        [1, 3.5],
+        [1, 7],
+        ]
+
+    house_data = [
+        [1, 1600, 3],
+        [1, 2100, 2],
+    ]
+
+    print "Running Univariate Linear Regression:\n"
+    run_linear_regression('/data/ex1data1.txt', population_data)
+
+    print "Running Multiivariate Linear Regression:\n"
+    run_linear_regression('/data/ex1data2.txt', house_data, 'multi')
+
+def run_linear_regression(path, data, lr_type='uni'):
+    X, y, theta = preprocess_data(path)
 
     # best alpha/iters found with find_best_learning_rate
     alpha = 0.01
     iters = 1750
 
-    theta, _ = compute_gradient_descent(X, y, theta, alpha, iters)
-    run_predictions(theta)
+    theta, cost = compute_gradient_descent(X, y, theta, alpha, iters)
+    run_predictions(theta, data, lr_type)
 
 
-def run_predictions(theta):
-    house_data = [
-        [1, 3.5],
-        [1, 7],
-        ]
+def preprocess_data(path_arg):
+    data = get_data(path_arg)
 
-    # returns Numpy matrices. Use .item() to retrive integer value
-    prediction_1 = compute_hypothesis(house_data[0], theta).item() * 10000
-    prediction_2 = compute_hypothesis(house_data[1], theta).item() * 10000
-
-    print "Predict values for population sizes of 35,000 and 70,000:\n"
-    print "Population = 35,000, predicted profit is: ${}".format(prediction_1)
-    print "Population = 70,000, predicted profit is: ${}".format(prediction_2)
-
-
-def get_data():
-    pwd = os.getcwd()
-    path = pwd + '/data/ex1data1.txt'
-
-    return pd.read_csv(path, header=None, names=['Population', 'Profit'])
-
-
-def preprocess_data():
-    data = get_data()
+    if path_arg == '/data/ex1data2.txt':
+        print "Normalizing data for multivariate linear regression"
+        data = (data - data.mean()) / data.std()
 
     # append a 'ones' column to the front of the dataset
     data.insert(0, 'Ones', 1)
@@ -48,20 +47,48 @@ def preprocess_data():
     # the splicing is done this way for general-purpose. However many columns
     # our X data has, splice it up until the last column
     # (up to but not including)
-    X = data.iloc[:, :num_cols-1]
+    X = data.iloc[:, :num_cols - 1]
 
     # y will always be the last column, whatever the 'last' is in any general
     # case. Splice from the last column up to the end
-    y = data.iloc[:, num_cols-1:]
+    y = data.iloc[:, num_cols - 1:]
 
     X = np.matrix(X.values)
     y = np.matrix(y.values)
-    theta = np.matrix(np.array([0, 0]))
+
+    # set theta to accommodate any size of X's features
+    theta = np.matrix(np.zeros(num_cols - 1))
 
     return X, y, theta
 
+
+def get_data(path_arg):
+    pwd = os.getcwd()
+    path = pwd + path_arg
+
+    if path_arg == '/data/ex1data1.txt':
+        return pd.read_csv(path, header=None, names=['Population', 'Profit'])
+    else:
+        return pd.read_csv(path, header=None, names=[
+                           'Size', 'Bedrooms', 'Price'])
+
+
+def run_predictions(theta, data, lr_type='uni'):
+    # returns Numpy matrices. Use .item() to retrive integer value
+    prediction_1 = compute_hypothesis(data[0], theta).item()
+    prediction_2 = compute_hypothesis(data[1], theta).item()
+
+    if lr_type == 'uni':
+        print "Population = 35,000, predicted profit is: ${}".format(prediction_1 * 10000)
+        print "Population = 70,000, predicted profit is: ${}".format(prediction_2 * 10000)
+    else:
+        print "Size = 1600ft, bedrooms = 3, predicted price is: ${}".format(prediction_1)
+        print "Size = 2100ft, bedrooms = 2, predicted price is: ${}".format(prediction_2)
+
+
 def compute_hypothesis(X, theta):
     return X * theta.T
+
 
 def compute_cost(X, y, theta):
     m = len(X)
