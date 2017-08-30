@@ -103,6 +103,7 @@ def compute_gradient_descent(theta, X, y, reg_lambda):
 
     return grad
 
+
 def compute_one_vs_all(X, y, num_labels, reg_lambda):
     print "Training..."
     
@@ -142,6 +143,7 @@ def compute_one_vs_all(X, y, num_labels, reg_lambda):
         all_theta[i-1, :] = fmin.x
 
     return all_theta
+
 
 if __name__ == '__main__':
     main()
