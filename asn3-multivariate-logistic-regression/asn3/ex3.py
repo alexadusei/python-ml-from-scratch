@@ -29,7 +29,7 @@ def get_data(path_arg):
 def run_predictions(X, y, all_theta):
     y_pred = predict_all(X, all_theta)
     correct = [1 if a == b else 0 for (a, b) in zip(y_pred, y)]
-    accuracy = (sum(map(int, correct))/ float(len(correct)))
+    accuracy = (sum(map(int, correct)) / float(len(correct)))
 
     print 'Accuracy = {0}%'.format(accuracy * 100)
 
